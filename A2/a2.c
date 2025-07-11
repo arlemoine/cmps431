@@ -10,6 +10,8 @@
 int core[2] = {-1, -1}; // -1 indicates that the core is available
 int targetCore;
 int burstTime[10] = {3, 20, 4, 5, 15, 5, 10, 5, 4, 5};
+double elapsedTime[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
 pthread_mutex_t coreLock;
 
 typedef struct process {
@@ -23,11 +25,11 @@ void timespecDiff(struct timespec *timeDiff, struct timespec *timeStop, struct t
 int main() {
     pthread_t process[10];
     pthread_mutex_init(&coreLock, NULL); // Init the mutex lock for the cores
+    struct timespec timeTotalStart;
+    struct timespec timeTotalStop;
+    struct timespec timeTotalDiff;
 
-    printf("Starting CPU scheduler...\n");
-    printf("----------------------------------------------------------------------\n");
-    printf("Process Number\tBurst Time\tCore Number\tTime to Process (sec)\n");
-    printf("----------------------------------------------------------------------\n");
+    clock_gettime(CLOCK_MONOTONIC, &timeTotalStart);
 
     for (int i = 0; i < 10; i++) {
         // Loop until a core is available for the next process
@@ -73,6 +75,18 @@ int main() {
         }
     }
 
+    clock_gettime(CLOCK_MONOTONIC, &timeTotalStop);
+    timespecDiff(&timeTotalDiff, &timeTotalStop, &timeTotalStart); // Calculate and store time elapsed
+    double schedulerTotalTime = (double)timeTotalDiff.tv_sec + (double)timeTotalDiff.tv_nsec / 1000000000.0; // Store time elapsed in seconds (double)
+
+    double sumProcessTime;
+    for (int j = 0; j < 10; j++) {
+        sumProcessTime += elapsedTime[j];
+    };
+    double avgProcessTime = sumProcessTime / 10;
+
+    printf("...\nAll processes complete.\nAverage process time:\t%f sec\nTime elapsed:\t\t%f sec\n", avgProcessTime, schedulerTotalTime);   
+
     pthread_mutex_destroy(&coreLock);
     return 0;
 }
@@ -83,6 +97,7 @@ void *runProcess(void *arg) {
     int assignedCore = args->assignedCore;
     int burstDuration = burstTime[processNum];
 
+    printf("STARTING: Process %d on core %d, burstTime: %d\n", processNum, assignedCore, burstDuration);   
 
     // Store time variables
     struct timespec timeStart;
@@ -100,7 +115,9 @@ void *runProcess(void *arg) {
     timespecDiff(&timeDiff, &timeStop, &timeStart); // Calculate and store time elapsed
     double totalSeconds = (double)timeDiff.tv_sec + (double)timeDiff.tv_nsec / 1000000000.0; // Store time elapsed in seconds (double)
 
-    printf("%d\t\t%d\t\t%d\t\t%f\n", processNum, burstDuration, assignedCore, totalSeconds);    
+    printf("\tCOMPLETED: Process %d on core %d, burstTime: %d, time: %f sec\n", processNum, assignedCore, burstDuration, totalSeconds);    
+ 
+    elapsedTime[processNum] = totalSeconds;
     
     // Signal the "core" as being free
     pthread_mutex_lock(&coreLock); // Lock the core variable
