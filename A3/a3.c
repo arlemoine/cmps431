@@ -22,21 +22,24 @@ typedef struct {
     int processNum;
 } ThreadArgs;
 
+// Define transaction orders
 void populateProcesses(bool randomize);
 void *processTransactionIn(void *arg);
 void *processTransactionOut(void *arg);
 void processTransactions();
 
 int main() {
-    populateProcesses(false); // Set to false to use hardcoded example processes
+    // false for hard-coded transaction processes, true for randomized processes
+    populateProcesses(false); 
 
     printf("=== Initial Process List ===\n");
     for (int i = 0; i < NUM_PROCESSES; i++) {
-        printf("Process %d: Type '%s', Stock Item '%d', Qty '%d', Status '%s'\n",
+        printf("Transaction %d: Type '%s', Stock Item '%d', Qty '%d', Status '%s'\n",
                i, processType[i], processStockSelection[i], processStockQty[i], processStatus[i]);
     }
 
-    processTransactions();
+    // Main loop to run transaction processes
+    processTransactions(); 
 
     printf("\n=== Final Stock Levels ===\n");
     for (int i = 0; i < NUM_STOCK_ITEMS; i++) {
@@ -46,6 +49,8 @@ int main() {
 
     return 0;
 }
+
+// === Helper functions ===
 
 void getMutex(int itemIndex) {
     pthread_mutex_lock(&mutexes[itemIndex]);
@@ -85,6 +90,8 @@ void populateProcesses(bool randomize) {
     }
 }
 
+// === End helper functions ===
+
 void *processTransactionOut(void *arg) {
     ThreadArgs *args = (ThreadArgs *)arg;
     int processNum = args->processNum;
@@ -96,6 +103,7 @@ void *processTransactionOut(void *arg) {
 
     getMutex(itemIndex);
 
+    // Either perform the stock withdrawal or mark the transaction as not done due to inventory restrictions
     if (stock[itemIndex] < requestedQty) {
         printf("[Transaction %d] PAUSE: Not enough stock for Stock Item %d (available: %d, requested: %d). Status set to WAITING.\n", processNum, itemIndex, stock[itemIndex], requestedQty);
         processStatus[processNum] = "waiting";
@@ -128,6 +136,7 @@ void *processTransactionIn(void *arg) {
     processStatus[processNum] = "done";
     releaseMutex(itemIndex);
 
+    // Mark previously pending stock withdrawals to try again if delayed due to this particular stock item's inventory
     for (int i = 0; i < NUM_PROCESSES; i++) {
         if (strcmp(processStatus[i], "waiting") == 0 && processStockSelection[i] == itemIndex) {
             printf("[Transaction %d] Stock for Item %d increased. Marking WAITING transaction %d as READY.\n", processNum, itemIndex, i);
@@ -148,6 +157,7 @@ void processTransactions() {
     bool lastRun = false; // Keep track of when the last loop to attempt transactions happens
     pthread_t threads[NUM_PROCESSES];
 
+    // Determine number of transactions of type 'in'
     for (int i = 0; i < NUM_PROCESSES; i++) {
         if (strcmp(processType[i], "in") == 0) {
             incomingStockProcessesRemaining++;
@@ -157,7 +167,8 @@ void processTransactions() {
     printf("\n=== Work Start ===\n");
     int loop_count = 0;
 
-    while (true) { // Loop through list of transactions
+    // Main loop - loop through list of transactions
+    while (true) { 
         loop_count++;
 
         int current_processes_not_done = 0;
@@ -165,6 +176,7 @@ void processTransactions() {
         int current_outgoing_waiting = 0;
 
         for (int i = 0; i < NUM_PROCESSES; i++) {
+            // Skip completed transactions
             if (strcmp(processStatus[i], "done") == 0) {
                 continue;
             }
@@ -177,6 +189,7 @@ void processTransactions() {
                 current_outgoing_waiting++;
             }
 
+            // Assign incomplete transaction to a worker
             if (strcmp(processStatus[i], "ready") == 0 || strcmp(processStatus[i], "waiting") == 0) {
                 ThreadArgs *args = (ThreadArgs *)malloc(sizeof(ThreadArgs));
                 args->processNum = i;
@@ -198,11 +211,13 @@ void processTransactions() {
             }
         }
 
+        // Check for completion of all transactions
         if (current_processes_not_done == 0) {
             printf("\n...\nAll processes completed successfully!\n");
             break;
         }
 
+        // Last run - attempt final stock inventory withdrawals
         if (lastRun) {
             bool any_ready_processes_left = false;
             for (int i = 0; i < NUM_PROCESSES; i++) {
@@ -227,6 +242,7 @@ void processTransactions() {
             }
         }
 
+        // Note when the last transaction of type 'in' has been handed to a worker
         if (incomingStockProcessesRemaining == 0 && !lastRun) {
             printf("...\nAll incoming stock transactions have been launched.\n...\n");
             lastRun = true;
@@ -239,6 +255,7 @@ void processTransactions() {
         pthread_mutex_destroy(&mutexes[i]);
     }
     
+    // Allow all workers the chance to finish and close child threads
     usleep(100000);
 }
 
