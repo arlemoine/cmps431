@@ -22,10 +22,30 @@ typedef struct {
     int processNum;
 } ThreadArgs;
 
-void populateTasks(bool randomize);
+void populateProcesses(bool randomize);
 void *processTransactionIn(void *arg);
 void *processTransactionOut(void *arg);
 void processTransactions();
+
+int main() {
+    populateProcesses(false); // Set to false to use hardcoded example processes
+
+    printf("=== Initial Process List ===\n");
+    for (int i = 0; i < NUM_PROCESSES; i++) {
+        printf("Process %d: Type '%s', Stock Item '%d', Qty '%d', Status '%s'\n",
+               i, processType[i], processStockSelection[i], processStockQty[i], processStatus[i]);
+    }
+
+    processTransactions();
+
+    printf("\n=== Final Stock Levels ===\n");
+    for (int i = 0; i < NUM_STOCK_ITEMS; i++) {
+        printf("Item %d: %d\n", processStockSelection[i], stock[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
 
 void getMutex(int itemIndex) {
     pthread_mutex_lock(&mutexes[itemIndex]);
@@ -220,25 +240,5 @@ void processTransactions() {
     }
     
     usleep(100000);
-}
-
-int main() {
-    populateProcesses(false); // Set to false to use hardcoded example processes
-
-    printf("=== Initial Process List ===\n");
-    for (int i = 0; i < NUM_PROCESSES; i++) {
-        printf("Process %d: Type '%s', Stock Item '%d', Qty '%d', Status '%s'\n",
-               i, processType[i], processStockSelection[i], processStockQty[i], processStatus[i]);
-    }
-
-    processTransactions();
-
-    printf("\n=== Final Stock Levels ===\n");
-    for (int i = 0; i < NUM_STOCK_ITEMS; i++) {
-        printf("Item %d: %d\n", processStockSelection[i], stock[i]);
-    }
-    printf("\n");
-
-    return 0;
 }
 
