@@ -1,0 +1,40 @@
+ 1010  date
+ 1011  mkdir adriean
+ 1012  ls
+ 1013  mkdir lemoine
+ 1014  ls
+ 1015  echo 'this is a test'
+ 1016  echo 'this is a test' > somefile.txt
+ 1017  echo 'this is fun' > otherfile.txt
+ 1018  echo 'I like this' > myfile.txt
+ 1019  cp *.txt adriean
+ 1020  cp *.txt lemoine
+ 1021  cd lemoine
+ 1022  pwd
+ 1023  ls
+ 1024  ls -l
+ 1025  echo 'this is getting interesting' > my2ndfile.txt
+ 1026  ls
+ 1027  ls ..
+ 1028  myvar=$(ls -l)
+ 1029  echo $myvar
+ 1030  echo "Alpha\nBeta\nGamma"
+ 1031  echo -e "Alpha\nBeta\nGamma"
+ 1032  echo -e "Alpha\nBeta\nGamma" > data.txt
+ 1033  cat data.txt 
+ 1034  pwd
+ 1035  cd ..
+ 1036  pwd
+ 1037  ls -l
+ 1038  ls adriean
+ 1039  ls adriean/*
+ 1040  myvar=$(date +%Y_%m_%d_%H_%M_%S)
+ 1041  echo $myvar 
+ 1042  cp lemoine/my2ndfile.txt .
+ 1043  cp adriean/somefile.txt my3rdfile.txt
+ 1044  ls -l
+ 1045  rm somefile.txt 
+ 1046  mv otherfile.txt renamed.txt
+ 1047  ls
+ 1048  cd
+ 1049  history > myhist.txt
