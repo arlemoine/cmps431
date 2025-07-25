@@ -17,9 +17,11 @@ For the capturing of material associated with CMPS 431 - Operating Systems.
 - [Topic 9](docs/topic9.md)
 - [Topic 10](docs/topic10.md)
 - [Topic 11](docs/topic11.md)
+- [Topic 12](docs/topic12.md)
 
 ## Assignments
 
 [Assignment 1](https://github.com/arlemoine/cmps431/tree/main/A1)  
 [Assignment 2](https://github.com/arlemoine/cmps431/tree/main/A2)  
 [Assignment 3](https://github.com/arlemoine/cmps431/tree/main/A3)  
+[Assignment 4](https://github.com/arlemoine/cmps431/tree/main/A4)
